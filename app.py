@@ -2,6 +2,7 @@
 
 import requests
 import argparse
+import sys
 from config import Config
 
 MEMOS_API = Config.MEMOS_URL + "/api/v1/memos"
@@ -15,10 +16,14 @@ PARAMS = {
 OUTPUT_PATH = "memos.md"
 
 def get_filtered_memos(filter):
-    response = requests.get(MEMOS_API, headers=HEADERS, params=PARAMS)
-    response.raise_for_status()
-    response_dict = response.json()
+    try:
+        response = requests.get(MEMOS_API, headers=HEADERS, params=PARAMS)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch memos: {e}", file=sys.stderr)
+        return None
 
+    response_dict = response.json()
     memos_filtered = [
         memo for memo in response_dict["memos"]
         if filter in memo["content"]
@@ -34,8 +39,15 @@ def create_markdown(memos, filter):
     return markdown
 
 def write_markdown(path, content):
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+    except IOError as e:
+        print(f"Failed to write file {path}: {e}", file=sys.stderr)
+        return False
+
+    print(f"Exported to {path}.")
+    return True
 
 def main():
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
@@ -43,9 +55,13 @@ def main():
     args = parser.parse_args()
 
     memos_filtered = get_filtered_memos(args.filter)
+    if memos_filtered is None:
+        sys.exit(1)
+
     output_content = create_markdown(memos_filtered, args.filter)
-    write_markdown(OUTPUT_PATH, output_content)
-    print(f"Exported to {OUTPUT_PATH}.")
+    success = write_markdown(OUTPUT_PATH, output_content)
+    if not success:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
