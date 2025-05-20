@@ -7,5 +7,3 @@ class Config:
 
     MAX_MEMOS = 1000
 
-    TAG = ""
-
