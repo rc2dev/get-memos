@@ -13,7 +13,6 @@ PARAMS = {
     "user": Config.MEMOS_USER,
     "pageSize": Config.MAX_MEMOS
 }
-OUTPUT_PATH = "memos.md"
 
 def get_filtered_memos(filter):
     try:
@@ -52,6 +51,7 @@ def write_markdown(path, content):
 def main():
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
     parser.add_argument("filter", help="Tag or string to filter memos")
+    parser.add_argument("-o", "--output", default=Config.DEFAULT_OUTPUT, help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})")
     args = parser.parse_args()
 
     memos_filtered = get_filtered_memos(args.filter)
@@ -59,7 +59,7 @@ def main():
         sys.exit(1)
 
     output_content = create_markdown(memos_filtered, args.filter)
-    success = write_markdown(OUTPUT_PATH, output_content)
+    success = write_markdown(args.output, output_content)
     if not success:
         sys.exit(1)
 
