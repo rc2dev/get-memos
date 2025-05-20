@@ -14,7 +14,7 @@ PARAMS = {
     "pageSize": Config.MAX_MEMOS
 }
 
-def get_filtered_memos(filter):
+def get_filtered_memos(query):
     try:
         response = requests.get(MEMOS_API, headers=HEADERS, params=PARAMS)
         response.raise_for_status()
@@ -25,12 +25,12 @@ def get_filtered_memos(filter):
     response_dict = response.json()
     memos_filtered = [
         memo for memo in response_dict["memos"]
-        if filter in memo["content"]
+        if query in memo["content"]
     ]
     return memos_filtered
 
-def create_markdown(memos, filter):
-    markdown = f"# Memos with '{filter}'\n\n"
+def create_markdown(memos, query):
+    markdown = f"# Memos with '{query}'\n\n"
     markdown += f"Memos found: {len(memos)}\n\n"
     for memo in sorted(memos, key=lambda m: m["createTime"]):
         markdown += f"## { memo['createTime'] }\n\n"
@@ -50,15 +50,15 @@ def write_markdown(path, content):
 
 def main():
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
-    parser.add_argument("filter", help="Tag or string to filter memos")
+    parser.add_argument("query", help="Tag or any string to filter memos")
     parser.add_argument("-o", "--output", default=Config.DEFAULT_OUTPUT, help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})")
     args = parser.parse_args()
 
-    memos_filtered = get_filtered_memos(args.filter)
+    memos_filtered = get_filtered_memos(args.query)
     if memos_filtered is None:
         sys.exit(1)
 
-    output_content = create_markdown(memos_filtered, args.filter)
+    output_content = create_markdown(memos_filtered, args.query)
     success = write_markdown(args.output, output_content)
     if not success:
         sys.exit(1)
