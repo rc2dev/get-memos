@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import requests
+from config import Config
+
+MEMOS_API = Config.MEMOS_URL + "/api/v1/memos"
+HEADERS = {
+    "Authorization": f"Bearer {Config.MEMOS_TOKEN}"
+}
+PARAMS = {
+    "user": Config.MEMOS_USER,
+    "pageSize": Config.MAX_MEMOS
+}
+
+def get_memos_with_tag():
+    response = requests.get(MEMOS_API, headers=HEADERS, params=PARAMS)
+    response.raise_for_status()
+    response_dict = response.json()
+
+    memos_filtered = [
+        memo for memo in response_dict["memos"]
+        if Config.TAG in memo["content"]
+    ]
+    return memos_filtered
+
+def create_markdown(memos):
+    markdown = f"# Memos with tag '{Config.TAG}'\n\n"
+    markdown += f"Memos found: {len(memos)}\n\n"
+    for memo in sorted(memos, key=lambda m: m["createTime"]):
+        markdown += f"## { memo['createTime'] }\n\n"
+        markdown += f"{memo['content'].strip()}\n\n"
+    return markdown
+
+def write_markdown(path, content):
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+memos_filtered = get_memos_with_tag()
+md = create_markdown(memos_filtered)
+write_markdown("memos.md", md)
+print("Done.")
