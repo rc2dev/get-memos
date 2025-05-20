@@ -12,6 +12,7 @@ PARAMS = {
     "user": Config.MEMOS_USER,
     "pageSize": Config.MAX_MEMOS
 }
+OUTPUT_PATH = "memos.md"
 
 def get_filtered_memos(filter):
     response = requests.get(MEMOS_API, headers=HEADERS, params=PARAMS)
@@ -42,9 +43,9 @@ def main():
     args = parser.parse_args()
 
     memos_filtered = get_filtered_memos(args.filter)
-    md = create_markdown(memos_filtered, args.filter)
-    write_markdown("memos.md", md)
-    print("Done.")
+    output_content = create_markdown(memos_filtered, args.filter)
+    write_markdown(OUTPUT_PATH, output_content)
+    print(f"Exported to {OUTPUT_PATH}.")
 
 if __name__ == "__main__":
     main()
