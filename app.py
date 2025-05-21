@@ -50,7 +50,7 @@ def write_markdown(path, content):
 
 def main():
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
-    parser.add_argument("query", help="Tag or any string to filter memos")
+    parser.add_argument("query", help="Tag or any string to filter memos. Use \"\" for all.")
     parser.add_argument("-o", "--output", default=Config.DEFAULT_OUTPUT, help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})")
     args = parser.parse_args()
 
