@@ -1,15 +1,23 @@
 # get-memos
 
-Export Memos to a markdown file.
+Export [Memos](https://www.usememos.com/) to a markdown file.
 
-## Installation and usage
+## Installation
 
-1. Create your configuration: `cp config_example.py config.py` and edit.
-2. Run `./app.py`.
+1. Clone the repository.
+
+2. Create a token on your Memos instance.
+
+3. Create your configuration from the example:
+   `cp config_example.py config.py && $EDITOR config.py`.
+
+## Usage
+
+Run `./app.py -h` for usage information.
 
 ## Known limitations
 
-This only intends to export the text of the memos. Attachments are not handled.
+This only intends to export text. Attachments are not handled.
 
 ## License
 
