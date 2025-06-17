@@ -5,37 +5,60 @@ import argparse
 import sys
 from config import Config
 
-MEMOS_API = Config.MEMOS_URL + "/api/v1/memos"
+MEMOS_API = Config.MEMOS_URL + "/api/v1"
 HEADERS = {
     "Authorization": f"Bearer {Config.MEMOS_TOKEN}"
 }
-PARAMS = {
-    "user": Config.MEMOS_USER,
-    "pageSize": Config.MAX_MEMOS
-}
 
-def get_filtered_memos(query):
-    try:
-        response = requests.get(MEMOS_API, headers=HEADERS, params=PARAMS)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to fetch memos: {e}", file=sys.stderr)
-        return None
 
-    response_dict = response.json()
-    memos_filtered = [
-        memo for memo in response_dict["memos"]
-        if query in memo["content"]
+def get_memos():
+    endpoint = MEMOS_API + "/memos"
+    params = {
+        "user": Config.MEMOS_USER,
+        "pageSize": Config.PAGE_SIZE,
+        "sort": "createTime"
+    }
+
+    all_memos = []
+
+    while True:
+        try:
+            response = requests.get(endpoint, headers=HEADERS, params=params)
+            response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to fetch memos: {e}", file=sys.stderr)
+            return None
+
+        response_dict = response.json()
+
+        page_memos = response_dict.get("memos", [])
+        all_memos.extend(page_memos)
+
+        page_token = response_dict.get("nextPageToken")
+        if page_token:
+            params["pageToken"] = page_token
+        else:
+            break
+
+    return all_memos
+
+
+def filter_memos(memos, query):
+    return [
+        memo for memo in memos 
+        if query in memo.get("content", "") 
     ]
-    return memos_filtered
+
 
 def create_markdown(memos, query):
     markdown = f"# Memos with '{query}'\n\n"
     markdown += f"Memos found: {len(memos)}\n\n"
-    for memo in sorted(memos, key=lambda m: m["createTime"]):
+    for memo in memos:
         markdown += f"## { memo['createTime'] }\n\n"
         markdown += f"{memo['content'].strip()}\n\n"
     return markdown
+
 
 def write_markdown(path, content):
     try:
@@ -48,20 +71,26 @@ def write_markdown(path, content):
     print(f"Exported to {path}.")
     return True
 
+
 def main():
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
     parser.add_argument("query", help="Tag or any string to filter memos. Use \"\" for all.")
     parser.add_argument("-o", "--output", default=Config.DEFAULT_OUTPUT, help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})")
     args = parser.parse_args()
 
-    memos_filtered = get_filtered_memos(args.query)
-    if memos_filtered is None:
+    memos = get_memos()
+    if memos is None:
+        print("Exiting with error.")
         sys.exit(1)
+
+    memos_filtered = filter_memos(memos, args.query)
 
     output_content = create_markdown(memos_filtered, args.query)
     success = write_markdown(args.output, output_content)
     if not success:
+        print("Exiting with error.")
         sys.exit(1)
 
+         
 if __name__ == "__main__":
     main()

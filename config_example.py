@@ -5,6 +5,6 @@ class Config:
 
     MEMOS_USER = ""
 
-    MAX_MEMOS = 1000
+    PAGE_SIZE = 100
 
     DEFAULT_OUTPUT = "memos.md"
