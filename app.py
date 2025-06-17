@@ -4,14 +4,17 @@ import requests
 import argparse
 import sys
 from config import Config
+from typing import Optional, List, Dict, Any
 
 MEMOS_API = Config.MEMOS_URL + "/api/v1"
 HEADERS = {
     "Authorization": f"Bearer {Config.MEMOS_TOKEN}"
 }
 
+Memo = Dict[str, Any]
 
-def get_memos():
+
+def get_memos() -> Optional[List[Memo]]:
     endpoint = MEMOS_API + "/memos"
     params = {
         "user": Config.MEMOS_USER,
@@ -44,14 +47,14 @@ def get_memos():
     return all_memos
 
 
-def filter_memos(memos, query):
+def filter_memos(memos: List[Memo], query: str) -> List[Memo]:
     return [
         memo for memo in memos 
         if query in memo.get("content", "") 
     ]
 
 
-def create_markdown(memos, query):
+def create_markdown(memos: List[Memo], query: str) -> str:
     markdown = f"# Memos with '{query}'\n\n"
     markdown += f"Memos found: {len(memos)}\n\n"
     for memo in memos:
@@ -60,7 +63,7 @@ def create_markdown(memos, query):
     return markdown
 
 
-def write_markdown(path, content):
+def write_markdown(path: str, content: str) -> bool:
     try:
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
@@ -72,7 +75,7 @@ def write_markdown(path, content):
     return True
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
     parser.add_argument("query", help="Tag or any string to filter memos. Use \"\" for all.")
     parser.add_argument("-o", "--output", default=Config.DEFAULT_OUTPUT, help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})")
@@ -91,6 +94,6 @@ def main():
         print("Exiting with error.")
         sys.exit(1)
 
-         
+
 if __name__ == "__main__":
     main()
