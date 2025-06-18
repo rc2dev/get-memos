@@ -1,9 +1,9 @@
 class Config:
-    MEMOS_URL = ""
+    MEMOS_URL = "https://your.memos.url"
 
-    MEMOS_TOKEN = ""
+    MEMOS_TOKEN = "Create a token on Memos settings and paste here"
 
-    MEMOS_USER = ""
+    MEMOS_USER = "your_username"
 
     PAGE_SIZE = 100
 
