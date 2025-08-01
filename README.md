@@ -6,9 +6,11 @@ Export [Memos](https://www.usememos.com/) to a markdown file.
 
 1. Clone the repository.
 
-2. Create a token on your Memos instance.
+2. Make sure you have Python's `requests` module installed.
 
-3. Create your configuration from the example:
+3. Create a token on your Memos instance.
+
+4. Create your configuration from the example:
    `cp config_example.py config.py && $EDITOR config.py`.
 
 ## Usage
