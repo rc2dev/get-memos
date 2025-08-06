@@ -7,4 +7,4 @@ class Config:
 
     PAGE_SIZE = 100
 
-    DEFAULT_OUTPUT = "memos.md"
+    DEFAULT_OUTPUT = "exported_memos.md"

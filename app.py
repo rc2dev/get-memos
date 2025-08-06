@@ -55,8 +55,9 @@ def filter_memos(memos: List[Memo], query: str) -> List[Memo]:
 
 
 def create_markdown(memos: List[Memo], query: str) -> str:
-    markdown = f"# Memos with '{query}'\n\n"
-    markdown += f"Memos found: {len(memos)}\n\n"
+    markdown = "# Exported memos\n\n"
+    markdown += f"- Query: '{query}'\n" if query else "- All memos\n"
+    markdown += f"- Count: {len(memos)}\n\n"
     for memo in memos:
         markdown += f"## { memo['createTime'] }\n\n"
         markdown += f"{memo['content'].strip()}\n\n"
@@ -77,7 +78,7 @@ def write_markdown(path: str, content: str) -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
-    parser.add_argument("query", help="Tag or any string to filter memos. Use \"\" for all.")
+    parser.add_argument("-q", "--query", default=None, help="Tag or any string to filter memos.")
     parser.add_argument("-o", "--output", default=Config.DEFAULT_OUTPUT, help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})")
     args = parser.parse_args()
 
@@ -86,7 +87,7 @@ def main() -> None:
         print("Exiting with error.")
         sys.exit(1)
 
-    memos_filtered = filter_memos(memos, args.query)
+    memos_filtered = filter_memos(memos, args.query) if args.query else memos
 
     output_content = create_markdown(memos_filtered, args.query)
     success = write_markdown(args.output, output_content)
