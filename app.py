@@ -3,13 +3,19 @@
 import argparse
 import sys
 import requests
-from config import Config
+import tomllib
+from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Dict, Any
 
-MEMOS_API = Config.MEMOS_URL + "/api/v1"
-HEADERS = {"Authorization": f"Bearer {Config.MEMOS_TOKEN}"}
+CONFIG_FILE = Path(__file__).parent / "config.toml"
+
 
 Memo = Dict[str, Any]
+
+
+class ConfigError(Exception):
+    pass
 
 
 class FetchError(Exception):
@@ -20,7 +26,27 @@ class WriteError(Exception):
     pass
 
 
-def build_parser() -> argparse.ArgumentParser:
+@dataclass
+class Config:
+    memos_url: str
+    memos_token: str
+    memos_user: str
+    page_size: int
+    default_output: str
+
+    @classmethod
+    def load(cls, path: Path = CONFIG_FILE) -> "Config":
+        try:
+            with open(path, "rb") as f:
+                data = tomllib.load(f)
+        except FileNotFoundError as e:
+            raise ConfigError(f"Missing config file: {path}")
+        except OSError as e:
+            raise ConfigError(f"Error loading config file: {e}")
+        return cls(**data)
+
+
+def build_parser(cfg: Config) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
     parser.add_argument(
         "-q", "--query", default=None, help="Tag or any string to filter memos."
@@ -28,17 +54,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-o",
         "--output",
-        default=Config.DEFAULT_OUTPUT,
-        help=f"Output markdown file (default: {Config.DEFAULT_OUTPUT})",
+        default=cfg.default_output,
+        help=f"Output markdown file (default: {cfg.default_output})",
     )
     return parser
 
 
-def fetch_memos() -> List[Memo]:
-    endpoint = MEMOS_API + "/memos"
+def fetch_memos(cfg: Config) -> List[Memo]:
+    memos_api = cfg.memos_url + "/api/v1"
+    headers = {"Authorization": f"Bearer {cfg.memos_token}"}
+    endpoint = memos_api + "/memos"
     params = {
-        "user": Config.MEMOS_USER,
-        "pageSize": Config.PAGE_SIZE,
+        "user": cfg.memos_user,
+        "pageSize": cfg.page_size,
         "sort": "createTime",
     }
 
@@ -46,7 +74,7 @@ def fetch_memos() -> List[Memo]:
 
     while True:
         try:
-            response = requests.get(endpoint, headers=HEADERS, params=params)
+            response = requests.get(endpoint, headers=headers, params=params)
             response.raise_for_status()
             response_dict = response.json()
         except requests.exceptions.RequestException as e:
@@ -111,11 +139,17 @@ def log(message: str) -> None:
 
 
 def main() -> None:
-    parser = build_parser()
+    try:
+        cfg = Config.load()
+    except ConfigError as e:
+        log(e)
+        sys.exit(1)
+
+    parser = build_parser(cfg)
     args = parser.parse_args()
 
     try:
-        memos = fetch_memos()
+        memos = fetch_memos(cfg)
     except FetchError as e:
         log(e)
         sys.exit(1)

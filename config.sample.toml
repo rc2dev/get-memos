@@ -1,0 +1,8 @@
+# Memos API Configuration
+memos_url = "https://your.memos.url"
+memos_token = "Create a token on Memos settings and paste here"
+memos_user = "your_username"
+
+# Export Settings
+page_size = 100
+default_output = "exported_memos.md"

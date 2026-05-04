@@ -11,7 +11,7 @@ Export [Memos](https://www.usememos.com/) to a markdown file.
 3. Create a token on your Memos instance.
 
 4. Create your configuration from the example:
-   `cp config_example.py config.py && $EDITOR config.py`.
+   `cp config.sample.toml config.toml && $EDITOR config.toml`.
 
 ## Usage
 
