@@ -138,12 +138,16 @@ def log(message: str) -> None:
     print(message, file=sys.stderr)
 
 
+def fatal(e: Exception) -> None:
+    log(str(e))
+    sys.exit(1)
+
+
 def main() -> None:
     try:
         cfg = Config.load()
     except ConfigError as e:
-        log(e)
-        sys.exit(1)
+        fatal(e)
 
     parser = build_parser(cfg)
     args = parser.parse_args()
@@ -151,8 +155,7 @@ def main() -> None:
     try:
         memos = fetch_memos(cfg)
     except FetchError as e:
-        log(e)
-        sys.exit(1)
+        fatal(e)
 
     memos_filtered = filter_memos(memos, args.query) if args.query else memos
 
@@ -161,8 +164,7 @@ def main() -> None:
     try:
         write_markdown(args.output, md_content)
     except WriteError as e:
-        log(e)
-        sys.exit(1)
+        fatal(e)
 
 
 if __name__ == "__main__":
