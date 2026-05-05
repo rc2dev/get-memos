@@ -6,6 +6,7 @@ import requests
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from datetime import datetime
 from typing import TypedDict
 
 CONFIG_FILE = Path(__file__).parent / "config.toml"
@@ -110,13 +111,20 @@ def filter_memos(memos: list[Memo], query: str) -> list[Memo]:
     return [m for m in memos if query in m.get("content", "")]
 
 
-def build_markdown(memos: list[Memo], query: str) -> str:
+def build_markdown(memos: list[Memo], cfg: Config, query: str) -> str:
     lines = []
 
     lines.append("# Exported memos")
     lines.append("")
-    lines.append(f"- Query: '{query}'" if query else "- No query, all memos")
+    lines.append(
+        f"- Exported at: {datetime.now().astimezone().isoformat(timespec="seconds")}"
+    )
+    lines.append(f"- Instance: <{cfg.memos_url}>")
+    lines.append(f"- User: {cfg.memos_user}")
+    lines.append(f"- Query: '{query}'" if query else "- No query (all memos)")
     lines.append(f"- Count: {len(memos)}")
+    lines.append("")
+    lines.append("---")
     lines.append("")
 
     for memo in memos:
@@ -164,7 +172,7 @@ def main() -> None:
 
     memos_filtered = filter_memos(memos, args.query) if args.query else memos
 
-    md_content = build_markdown(memos_filtered, args.query)
+    md_content = build_markdown(memos_filtered, cfg, args.query)
 
     try:
         write_markdown(args.output, md_content)
