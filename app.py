@@ -6,12 +6,14 @@ import requests
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, TypedDict
 
 CONFIG_FILE = Path(__file__).parent / "config.toml"
 
 
-Memo = Dict[str, Any]
+class Memo(TypedDict, total=False):
+    content: str
+    createTime: str
 
 
 class ConfigError(Exception):
