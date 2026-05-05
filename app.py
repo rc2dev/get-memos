@@ -6,7 +6,7 @@ import requests
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, TypedDict
+from typing import TypedDict
 
 CONFIG_FILE = Path(__file__).parent / "config.toml"
 
@@ -62,7 +62,7 @@ def build_parser(cfg: Config) -> argparse.ArgumentParser:
     return parser
 
 
-def fetch_memos(cfg: Config) -> List[Memo]:
+def fetch_memos(cfg: Config) -> list[Memo]:
     memos_api = cfg.memos_url.rstrip("/") + "/api/v1"
     headers = {"Authorization": f"Bearer {cfg.memos_token}"}
     endpoint = memos_api + "/memos"
@@ -103,14 +103,14 @@ def fetch_memos(cfg: Config) -> List[Memo]:
     return all_memos
 
 
-def filter_memos(memos: List[Memo], query: str) -> List[Memo]:
+def filter_memos(memos: list[Memo], query: str) -> list[Memo]:
     if not query:
         return memos
 
     return [m for m in memos if query in m.get("content", "")]
 
 
-def build_markdown(memos: List[Memo], query: str) -> str:
+def build_markdown(memos: list[Memo], query: str) -> str:
     lines = []
 
     lines.append("# Exported memos")
