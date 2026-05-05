@@ -63,7 +63,7 @@ def build_parser(cfg: Config) -> argparse.ArgumentParser:
 
 
 def fetch_memos(cfg: Config) -> List[Memo]:
-    memos_api = cfg.memos_url + "/api/v1"
+    memos_api = cfg.memos_url.rstrip("/") + "/api/v1"
     headers = {"Authorization": f"Bearer {cfg.memos_token}"}
     endpoint = memos_api + "/memos"
     params = {
