@@ -69,12 +69,15 @@ def fetch_memos(cfg: Config) -> List[Memo]:
         "pageSize": cfg.page_size,
         "sort": "createTime",
     }
+    timeout = (3, 20)
 
     all_memos = []
 
     while True:
         try:
-            response = requests.get(endpoint, headers=headers, params=params)
+            response = requests.get(
+                endpoint, headers=headers, params=params, timeout=timeout
+            )
             response.raise_for_status()
             response_dict = response.json()
         except requests.exceptions.RequestException as e:
