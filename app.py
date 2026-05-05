@@ -78,12 +78,21 @@ def filter_memos(memos: List[Memo], query: str) -> List[Memo]:
 
 
 def build_markdown(memos: List[Memo], query: str) -> str:
-    markdown = "# Exported memos\n\n"
-    markdown += f"- Query: '{query}'\n" if query else "- No query, all memos\n"
-    markdown += f"- Count: {len(memos)}\n\n"
+    lines = []
+
+    lines.append("# Exported memos")
+    lines.append("")
+    lines.append(f"- Query: '{query}'" if query else "- No query, all memos")
+    lines.append(f"- Count: {len(memos)}")
+    lines.append("")
+
     for memo in memos:
-        markdown += f"## { memo.get('createTime', '') }\n\n"
-        markdown += f"{memo.get('content', '').strip()}\n\n"
+        lines.append(f"## { memo.get('createTime', '') }")
+        lines.append("")
+        lines.append(f"{memo.get('content', '').strip()}")
+        lines.append("")
+
+    markdown = "\n".join(lines)
     return markdown
 
 
