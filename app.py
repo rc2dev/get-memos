@@ -16,6 +16,7 @@ CONFIG_FILE = Path(__file__).parent / "config.toml"
 class Memo(TypedDict, total=False):
     content: str
     createTime: str
+    name: str
 
 
 class ConfigError(Exception):
@@ -51,7 +52,9 @@ class Config:
 
 
 def build_parser(cfg: Config) -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Export memos to markdown file.")
+    parser = argparse.ArgumentParser(
+        description="Export selected memos to markdown files."
+    )
     parser.add_argument(
         "-q", "--query", default=None, help="Substring to search in memo content."
     )
@@ -59,7 +62,7 @@ def build_parser(cfg: Config) -> argparse.ArgumentParser:
         "-o",
         "--output",
         default=cfg.default_output,
-        help=f"Output markdown file (default: {cfg.default_output})",
+        help=f"Output directory prefix (default: {cfg.default_output})",
     )
     return parser
 
@@ -110,40 +113,59 @@ def fetch_memos(cfg: Config, query: str | None = None) -> list[Memo]:
     return all_memos
 
 
-def build_markdown(memos: list[Memo], cfg: Config, query: str) -> str:
-    lines = []
-
-    lines.append("# Exported memos")
-    lines.append("")
-    lines.append(
-        f"- Exported at: {datetime.now().astimezone().isoformat(timespec="seconds")}"
-    )
-    lines.append(f"- Instance: <{cfg.memos_url}>")
-    lines.append(f"- User: {cfg.memos_user}")
-    lines.append(f"- Query: '{query}'" if query else "- No query (all memos)")
-    lines.append(f"- Count: {len(memos)}")
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-
-    for memo in memos:
-        lines.append(f"# [MEMO: { memo.get('createTime', '') }]")
-        lines.append("")
-        lines.append(f"{memo.get('content', '').strip()}")
-        lines.append("")
-
-    markdown = "\n".join(lines)
-    return markdown
+def build_memo_markdown(memo: Memo) -> str:
+    lines = [
+        f"# [MEMO: {memo.get('createTime', '')}]",
+        "",
+        memo.get("content", "").strip(),
+        "",
+    ]
+    return "\n".join(lines)
 
 
-def write_markdown(path: str, content: str) -> None:
+def build_memo_filename(memo: Memo) -> str:
+    created_time = datetime.fromisoformat(memo["createTime"])
+    timestamp = created_time.strftime("%Y-%m-%d_%H-%M-%SZ")
+    memo_id = memo["name"].rsplit("/", 1)[-1]
+    return f"{timestamp}_{memo_id}.md"
+
+
+def build_readme_markdown(
+    memos: list[Memo], cfg: Config, query: str | None, exported_at: datetime
+) -> str:
+    lines = [
+        "# Exported memos",
+        "",
+        f"- Exported at: {exported_at.isoformat(sep=' ', timespec='seconds')}",
+        f"- Instance: <{cfg.memos_url}>",
+        f"- User: {cfg.memos_user}",
+        f"- Query: '{query}'" if query else "- No query (all memos)",
+        f"- Count: {len(memos)}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def write_memos(path: str, memos: list[Memo], cfg: Config, query: str | None) -> None:
+    exported_at = datetime.now().astimezone()
+    timestamp = exported_at.strftime("%Y-%m-%d_%H-%M-%S")
+
+    output_base = Path(path)
+    directory_name = f"{output_base.name}_{timestamp}"
+    output_dir = output_base.parent / directory_name
+
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(content)
-    except OSError as e:
-        raise WriteError(f"Failed to write file {path}: {e}")
+        output_dir.mkdir(parents=True)
 
-    print(f"Exported to {path}.")
+        (output_dir / "README.md").write_text(
+            build_readme_markdown(memos, cfg, query, exported_at), encoding="utf-8"
+        )
+
+        for memo in memos:
+            memo_path = output_dir / build_memo_filename(memo)
+            memo_path.write_text(build_memo_markdown(memo), encoding="utf-8")
+    except OSError as e:
+        raise WriteError(f"Failed to write memos to {output_dir}: {e}")
 
 
 def log(message: str) -> None:
@@ -169,10 +191,8 @@ def main() -> None:
     except FetchError as e:
         fatal(e)
 
-    md_content = build_markdown(memos, cfg, args.query)
-
     try:
-        write_markdown(args.output, md_content)
+        write_memos(args.output, memos, cfg, args.query)
     except WriteError as e:
         fatal(e)
 

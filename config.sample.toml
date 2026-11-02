@@ -5,4 +5,4 @@ memos_user = "your_username"
 
 # Export Settings
 page_size = 100
-default_output = "exported_memos.md"
+default_output = "exported_memos"

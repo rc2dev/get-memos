@@ -1,6 +1,6 @@
 # get-memos
 
-Export [Memos](https://www.usememos.com/) to a markdown file.
+Export selected [Memos](https://www.usememos.com/) to markdown files.
 
 ## Requirements
 
@@ -23,7 +23,7 @@ Run `./app.py -h` for usage information.
 
 ## Known limitations
 
-This only intends to export text. Attachments are not handled.
+Only memo text and creation timestamps are exported. Attachments are not handled.
 
 ## License
 
