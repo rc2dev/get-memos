@@ -53,7 +53,7 @@ class Config:
 def build_parser(cfg: Config) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Export memos to markdown file.")
     parser.add_argument(
-        "-q", "--query", default=None, help="Tag or any string to filter memos."
+        "-q", "--query", default=None, help="Substring to search in memo content."
     )
     parser.add_argument(
         "-o",
@@ -64,12 +64,17 @@ def build_parser(cfg: Config) -> argparse.ArgumentParser:
     return parser
 
 
-def fetch_memos(cfg: Config) -> list[Memo]:
+def fetch_memos(cfg: Config, query: str | None = None) -> list[Memo]:
     memos_api = cfg.memos_url.rstrip("/") + "/api"
+
+    filters = [f"creator == {json.dumps(f'users/{cfg.memos_user}')}"]
+    if query:
+        filters.append(f"content.contains({json.dumps(query)})")
+
     headers = {"Authorization": f"Bearer {cfg.memos_token}"}
     endpoint = memos_api + "/memos"
     params = {
-        "filter": f"creator == {json.dumps(f'users/{cfg.memos_user}')}",
+        "filter": " && ".join(filters),
         "pageSize": cfg.page_size,
         "orderBy": "create_time desc",
     }
@@ -103,13 +108,6 @@ def fetch_memos(cfg: Config) -> list[Memo]:
             break
 
     return all_memos
-
-
-def filter_memos(memos: list[Memo], query: str) -> list[Memo]:
-    if not query:
-        return memos
-
-    return [m for m in memos if query in m.get("content", "")]
 
 
 def build_markdown(memos: list[Memo], cfg: Config, query: str) -> str:
@@ -167,13 +165,11 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        memos = fetch_memos(cfg)
+        memos = fetch_memos(cfg, args.query)
     except FetchError as e:
         fatal(e)
 
-    memos_filtered = filter_memos(memos, args.query) if args.query else memos
-
-    md_content = build_markdown(memos_filtered, cfg, args.query)
+    md_content = build_markdown(memos, cfg, args.query)
 
     try:
         write_markdown(args.output, md_content)
