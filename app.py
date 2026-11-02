@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import sys
 import requests
 import tomllib
@@ -64,13 +65,13 @@ def build_parser(cfg: Config) -> argparse.ArgumentParser:
 
 
 def fetch_memos(cfg: Config) -> list[Memo]:
-    memos_api = cfg.memos_url.rstrip("/") + "/api/v1"
+    memos_api = cfg.memos_url.rstrip("/") + "/api"
     headers = {"Authorization": f"Bearer {cfg.memos_token}"}
     endpoint = memos_api + "/memos"
     params = {
-        "user": cfg.memos_user,
+        "filter": f"creator == {json.dumps(f'users/{cfg.memos_user}')}",
         "pageSize": cfg.page_size,
-        "sort": "createTime",
+        "orderBy": "create_time desc",
     }
     timeout = (3, 20)
 
