@@ -127,7 +127,7 @@ def build_markdown(memos: list[Memo], cfg: Config, query: str) -> str:
     lines.append("")
 
     for memo in memos:
-        lines.append(f"## { memo.get('createTime', '') }")
+        lines.append(f"# [MEMO: { memo.get('createTime', '') }]")
         lines.append("")
         lines.append(f"{memo.get('content', '').strip()}")
         lines.append("")
