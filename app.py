@@ -8,13 +8,13 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 CONFIG_FILE = Path(__file__).parent / "config.toml"
 
 
-class Memo(TypedDict, total=False):
-    content: str
+class Memo(TypedDict):
+    content: NotRequired[str]
     createTime: str
     name: str
 
